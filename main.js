@@ -1,10 +1,15 @@
 function getObjectByPath(path, root) {
-  const keys = path.split('.');
+  const keys = path.split(/\.|\[|\]/).filter(Boolean);
 
   let result = root;
   for (let key of keys) {
     if (result !== undefined && result !== null) {
-      result = result[key];
+      const index = Number(key);
+      if (!isNaN(index) && Array.isArray(result)) {
+        result = result[index];
+      } else {
+        result = result[key];
+      }
     } else {
       return undefined;
     }
@@ -13,15 +18,50 @@ function getObjectByPath(path, root) {
   return result;
 }
 
-function dataLayerFunctions(eventDetails) {
+function setObjectByPath(path, value, root) {
+  const keys = path.split(/\.|\[|\]/).filter(Boolean);
+
+  let result = root;
+  for (let i = 0; i < keys.length - 1; i++) {
+    let key = keys[i];
+
+    const index = Number(key);
+    if (!isNaN(index) && Array.isArray(result)) {
+
+      if (result[index] === undefined) {
+        result[index] = {};
+      }
+      result = result[index];
+    } else {
+
+      if (result[key] === undefined) {
+        result[key] = {};
+      }
+      result = result[key];
+    }
+  }
+
+
+  const lastKey = keys[keys.length - 1];
+  const index = Number(lastKey);
+  if (!isNaN(index) && Array.isArray(result)) {
+    result[index] = value;
+  } else {
+    result[lastKey] = value;
+  }
+}
+
+function dataLayerFunctions(event, template) {
+  const eventDetails = template.eventDetails;
   const state = {
+    event: event,
     previousFunctionReturn: null
   };
 
   const setState = (key, data, overridePreviousFunctionReturn = true) => {
     state[key] = data;
     if (overridePreviousFunctionReturn) {
-      state.previousFunctionReturn = data;
+      state.previousFunctionReturn = {name:key ,state: data}
     }
   }
 
@@ -29,35 +69,40 @@ function dataLayerFunctions(eventDetails) {
     const obj = {};
     const eventDetailsLocal = state.data ? state.data : eventDetails;
 
-    const getProcessedValue = (detailValue, state, detail) => {
+    const getProcessedValue = (detailValue, state, index) => {
       if (typeof detailValue === 'string') {
-        if (detailValue.indexOf('$') === 0) {
-          return state?.data?.[detail] ? state.data[detail] : getObjectByPath(detailValue.split('$')[1], window);
+        if (detailValue.indexOf('w__') === 0) {
+          return getObjectByPath(detailValue.split('w__')[1], window);
         }
-
+        if (detailValue.indexOf('e__') === 0) {
+          return getObjectByPath(detailValue.split('e__')[1], state.event);
+        }
         if (detailValue.indexOf('c__') === 0) {
           const path = detailValue.split('__');
-          return state?.data?.[detail] ? state.data[detail] : getObjectByPath(path[1], state);
+          if (index !== null) {
+            path[1] = path[1].replace('[]', `[${index}]`);
+          }
+          const obj = getObjectByPath(path[1], state);
+          return obj;
         }
       }
 
       return detailValue;
     };
 
-    const deepProcess = (value, state) => {
+    const deepProcess = (value, state, index = null) => {
       if (Array.isArray(value)) {
-        return value.map((item) => deepProcess(item, state));
+        return value.map((item, i) => deepProcess(item, state, i));
       }
 
       if (typeof value === 'object' && value !== null) {
         const processedObj = {};
         Object.keys(value).forEach((key) => {
-          processedObj[key] = deepProcess(value[key], state);
+          processedObj[key] = deepProcess(value[key], state, index);
         });
         return processedObj;
       }
-
-      return getProcessedValue(value, state);
+      return getProcessedValue(value, state, index);
     };
 
     Object.keys(eventDetailsLocal).forEach((detail) => {
@@ -70,25 +115,6 @@ function dataLayerFunctions(eventDetails) {
 
     return obj;
   };
-
-  // const getData = (canSetState = true) => {
-  //   const obj = {};
-
-  //   Object.keys(eventDetails).forEach((detail) => {
-  //     obj[detail] = eventDetails[detail];
-  //     if (typeof eventDetails[detail] === 'string' && eventDetails[detail].indexOf('$') === 0) {
-  //       obj[detail] = state?.data?.[detail] ? state.data[detail] : getObjectByPath(eventDetails[detail].split('$')[1], window);
-  //     } else if (typeof eventDetails[detail] === 'string' && eventDetails[detail].indexOf('c__') === 0) {
-  //       const path = eventDetails[detail].split('__');
-  //       obj[detail] = state?.data?.[detail] ? state.data[detail] : getObjectByPath(path[1], state);
-  //     }
-  //   });
-
-  //   if (canSetState) {
-  //     setState('getData', obj);
-  //   }
-  //   return obj;
-  // }
 
   const pushData = () => {
     const data = getData(false);
@@ -125,8 +151,8 @@ function dataLayerFunctions(eventDetails) {
   }
 
   const formatString = () => {
-    if (state.previousFunctionReturn) {
-      const obj = objectRunFunctionInDeep(state.previousFunctionReturn, normalizeString);
+    if (state.previousFunctionReturn?.state) {
+      const obj = objectRunFunctionInDeep(state.previousFunctionReturn?.state, normalizeString);
       setState('data', obj);
     }
   }
@@ -153,13 +179,45 @@ function dataLayerFunctions(eventDetails) {
     });
   }
 
+  const retrieveProductItems = () => {
+    const product = {
+      name: "Cool Shirt",
+      id: "8321098316",
+      brand: "Crowthes",
+      category: "Apparel",
+      variant: "Blue",
+      price: 19.99
+    }
+    const product2 = {
+      name: "Cool Hat",
+      id: "1698748832",
+      brand: "Crowthes Master",
+      category: "Apparel",
+      variant: "Blues",
+      price: 27.87
+    }
+    setState('retrieveProductItems', [
+      {...product},
+      {...product2}
+    ]);
+  }
+
+  const createArrayTemplate = () => {
+    const [path] = template?.parameters.createArrayTemplate[0];
+    const itemTemplate = getObjectByPath(path, eventDetails);
+    setObjectByPath(path, state[state.previousFunctionReturn.name].map(() => itemTemplate[0]), eventDetails);
+    template?.parameters.createArrayTemplate.shift();
+  }
+
   return {
     pushData,
     getData,
     formatString,
     checkIsTested,
     retrieveFromEndpoint,
-    retrieveProductItem
+    retrieveProductItem,
+    retrieveProductItems,
+    createArrayTemplate
   }
 }
 
@@ -224,9 +282,9 @@ const DATALAYER_TEMPLATE = {
     "executeList": ["checkIsTested", "retrieveFromEndpoint", "getData", "formatString", "pushData"],
     "eventDetails": {
       "event": "page_view",
-      "page_location": "$location.href",
-      "page_path": "$location.pathname",
-      "page_title": "$document.title",
+      "page_location": "w__location.href",
+      "page_path": "w__location.pathname",
+      "page_title": "w__document.title",
       "custom_tested": "c__checkIsTested",
       "custom_callback": "c__retrieveFromEndpoint.callback",
       "custom_user": "c__retrieveFromEndpoint.userID",
@@ -249,6 +307,37 @@ const DATALAYER_TEMPLATE = {
         }]
       }
     }
+  },
+  "view_items" : {
+    "target": ".productCard",
+    "trigger": "DOMContentLoaded",
+    "executeList": ["retrieveProductItems", "createArrayTemplate", "createArrayTemplate", "getData", "formatString", "pushData"],
+    "parameters": {
+      "createArrayTemplate": [['ecommerce.items'], ['ecommerceSpecial.items']]
+    },
+    "eventDetails": {
+      "event": "view_items",
+      "ecommerce": {
+        "items": [{
+          "item_name": 'c__retrieveProductItems[].name',
+          "item_id": 'c__retrieveProductItems[].id',
+          "item_brand": 'c__retrieveProductItems[].brand',
+          "item_category": 'c__retrieveProductItems[].category',
+          "item_variant": 'c__retrieveProductItems[].variant',
+          "price": 'c__retrieveProductItems[].price'
+        }]
+      },
+      "ecommerceSpecial": {
+        "items": [{
+          "item_name": 'c__retrieveProductItems[].name',
+          "item_id": 'c__retrieveProductItems[].id',
+          "item_brand": 'c__retrieveProductItems[].brand',
+          "item_category": 'c__retrieveProductItems[].category',
+          "item_variant": 'c__retrieveProductItems[].variant',
+          "price": 'c__retrieveProductItems[].price'
+        }]
+      }
+    }
   }
 }
 
@@ -259,16 +348,14 @@ Object.keys(DATALAYER_TEMPLATE).forEach((templateKey) => {
   const template = DATALAYER_TEMPLATE[templateKey];
   const element = template.target === 'document' ? window.document : window.document.getElementById(template.target);
 
-  const functionsToExecute = () => {
-    const functionToExecute = dataLayerFunctions(template.eventDetails);
+  const functionsToExecute = (event) => {
+    const functionToExecute = dataLayerFunctions(event, template);
     template.executeList.forEach((execute) => {
       functionToExecute[execute]();
     })
   };
 
-  element.addEventListener(template.trigger, () => {
-    functionsToExecute();
-  });
+  element.addEventListener(template.trigger, functionsToExecute);
 
   element.triggerEvent(template.trigger);
   console.log(JSON.stringify(window.dataLayer[window.dataLayer.length - 1]));
