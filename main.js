@@ -288,7 +288,11 @@ const DATALAYER_TEMPLATE = {
       "custom_tested": "c__checkIsTested",
       "custom_callback": "c__retrieveFromEndpoint.callback",
       "custom_user": "c__retrieveFromEndpoint.userID",
-    }
+    },
+    "docs": {
+      "description": "An event that detects when a page is viewed",
+      "pages": "All pages",
+    },
   },
   "view_item" : {
     "target": ".productCard",
@@ -306,7 +310,11 @@ const DATALAYER_TEMPLATE = {
           "price": 'c__retrieveProductItem.price'
         }]
       }
-    }
+    },
+    "docs": {
+      "description": "An event to detects when a product item is viewed",
+      "pages": "All pages with products",
+    },
   },
   "view_items" : {
     "target": ".productCard",
@@ -319,7 +327,7 @@ const DATALAYER_TEMPLATE = {
       "event": "view_items",
       "ecommerce": {
         "items": [{
-          "item_name": 'c__retrieveProductItems[].name',
+          "item_name": "c__retrieveProductItems[].name",
           "item_id": 'c__retrieveProductItems[].id',
           "item_brand": 'c__retrieveProductItems[].brand',
           "item_category": 'c__retrieveProductItems[].category',
@@ -337,9 +345,15 @@ const DATALAYER_TEMPLATE = {
           "price": 'c__retrieveProductItems[].price'
         }]
       }
-    }
+    },
+    "docs": {
+      "description": "An event to detects when a product list is viewed",
+      "pages": "All pages with products",
+    },
   }
 }
+const DATALAYER_TEMPLATE_ORIGINAL = JSON.parse(JSON.stringify(DATALAYER_TEMPLATE));
+const datalayerResults = {};
 
 window.document.addElement('body', createElement('body'));
 window.document.addElement('.productCard', createElement('div'));
@@ -358,7 +372,113 @@ Object.keys(DATALAYER_TEMPLATE).forEach((templateKey) => {
   element.addEventListener(template.trigger, functionsToExecute);
 
   element.triggerEvent(template.trigger);
-  console.log(JSON.stringify(window.dataLayer[window.dataLayer.length - 1]));
+  datalayerResults[templateKey] = window.dataLayer[window.dataLayer.length - 1];
+  console.log(JSON.stringify(window.dataLayer[window.dataLayer.length - 1], null, 2));
 });
 
 
+
+// Docs
+const DOCS = {
+  "eventDetails": {
+    "event": "The event name you want to use. | **string**",
+    "page_location": "The full URL of the current page | **string**",
+    "page_path": "The path of the current page | **string**",
+    "page_title": "The title of the current page | **string**",
+    "custom_tested": "A boolean indicating if the function tested has been tested | **boolean**",
+    "custom_callback": "A callback function response | **boolean**",
+    "custom_user": "The unique ID of the user | **number**",
+    "ecommerce.items[].item_name": "Product name | **string**",
+    "ecommerce.items[].item_id": "Product id | **number**",
+    "ecommerce.items[].item_brand": "The product brand | **string**",
+    "ecommerce.items[].item_category": "The product category | **string**",
+    "ecommerce.items[].item_variant": "The product variant | **string**",
+    "ecommerce.items[].price": "The product price | **number**",
+    "ecommerceSpecial.items[].item_name": "Product name | **string**",
+    "ecommerceSpecial.items[].item_id": "Product id | **number**",
+    "ecommerceSpecial.items[].item_brand": "The product brand | **string**",
+    "ecommerceSpecial.items[].item_category": "The product category | **string**",
+    "ecommerceSpecial.items[].item_variant": "The product variant | **string**",
+    "ecommerceSpecial.items[].price": "The product price | **number**"
+  }
+}
+
+createDocs();
+
+function createDocs() {
+  const fs = require('fs');
+  const path = require('path');
+  let docString = '# Datalayer  \n';
+  docString += '## Table of content  \n';
+
+  Object.keys(DATALAYER_TEMPLATE_ORIGINAL).forEach((key) => {
+    docString += `- [${key}](#${key})  \n`;
+  });
+
+  Object.keys(DATALAYER_TEMPLATE_ORIGINAL).forEach((key) => {
+    const eventDetailsKeys = extractKeys(DATALAYER_TEMPLATE_ORIGINAL[key].eventDetails);
+    docString += `## ${key}  \n`;
+    docString += `${DATALAYER_TEMPLATE_ORIGINAL[key].docs.description}  \n`
+    docString += `**pages:** ${DATALAYER_TEMPLATE_ORIGINAL[key].docs.pages}  \n`
+    docString += `**Element target:** ${DATALAYER_TEMPLATE_ORIGINAL[key].target}  \n`;
+    docString += `**trigger datalayer:** ${DATALAYER_TEMPLATE_ORIGINAL[key].trigger}  \n`;
+    docString += `**Functions to execute:**  ${DATALAYER_TEMPLATE_ORIGINAL[key].executeList.map((executeItem) => `${executeItem}`).join(', ')}   \n`
+    docString += `### Event:  \n`
+    docString += `${eventDetailsKeys.map((key) => `**${key}**: ${DOCS.eventDetails[key]}  \n`).join('')}`
+    docString += `#### Template:  \n`
+    docString += "```json   \n"
+    docString += `${JSON.stringify(DATALAYER_TEMPLATE_ORIGINAL[key].eventDetails, null, 2)}  \n`
+    docString += "```  \n"
+    docString += `#### Example:  \n`
+    docString += "```json   \n"
+    docString += `${JSON.stringify(datalayerResults[key], null, 2).substring(0, 4000)}  \n`
+    docString += "```  \n"
+  });
+
+
+  createMarkdownFile('datalayer', docString)
+
+  function createMarkdownFile(filename, content) {
+    // Ensure the filename ends with .md
+    if (!filename.endsWith('.md')) {
+      filename += '.md';
+    }
+
+    const filePath = path.join(__dirname, filename);
+    const dirPath = path.dirname(filePath);  // Get the directory of the file
+
+    // Ensure the directory exists, or create it
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Write content to the markdown file
+    fs.writeFile(filePath, content, (err) => {
+      if (err) {
+        console.error('Error writing file:', err);
+      } else {
+        console.log(`File ${filename} created successfully at ${filePath}`);
+      }
+    });
+  }
+}
+
+
+function extractKeys(obj, path = "") {
+  let keys = [];
+
+  if (Array.isArray(obj)) {
+      if (obj.length > 0) {
+          keys.push(...extractKeys(obj[0], path + "[]"));
+      }
+  } else if (typeof obj === "object" && obj !== null) {
+      for (let key in obj) {
+          let newPath = path ? `${path}.${key}` : key;
+          keys.push(...extractKeys(obj[key], newPath));
+      }
+  } else {
+      keys.push(path);
+  }
+
+  return keys;
+}
