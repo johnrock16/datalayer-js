@@ -1,0 +1,23 @@
+{
+  "eventDetails": {
+    "event": "The event name you want to use. | **string**",
+    "page_location": "The full URL of the current page | **string**",
+    "page_path": "The path of the current page | **string**",
+    "page_title": "The title of the current page | **string**",
+    "custom_tested": "A boolean indicating if the function tested has been tested | **boolean**",
+    "custom_callback": "A callback function response | **boolean**",
+    "custom_user": "The unique ID of the user | **number**",
+    "ecommerce.items[].item_name": "Product name | **string**",
+    "ecommerce.items[].item_id": "Product id | **number**",
+    "ecommerce.items[].item_brand": "The product brand | **string**",
+    "ecommerce.items[].item_category": "The product category | **string**",
+    "ecommerce.items[].item_variant": "The product variant | **string**",
+    "ecommerce.items[].price": "The product price | **number**",
+    "ecommerceSpecial.items[].item_name": "Product name | **string**",
+    "ecommerceSpecial.items[].item_id": "Product id | **number**",
+    "ecommerceSpecial.items[].item_brand": "The product brand | **string**",
+    "ecommerceSpecial.items[].item_category": "The product category | **string**",
+    "ecommerceSpecial.items[].item_variant": "The product variant | **string**",
+    "ecommerceSpecial.items[].price": "The product price | **number**"
+  }
+}

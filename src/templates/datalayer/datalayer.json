@@ -1,0 +1,77 @@
+{
+  "page_view": {
+    "target": "document",
+    "trigger": "DOMContentLoaded",
+    "executeList": ["checkIsTested", "retrieveFromEndpoint", "getData", "formatString", "pushData"],
+    "eventDetails": {
+      "event": "page_view",
+      "page_location": "w__location.href",
+      "page_path": "w__location.pathname",
+      "page_title": "w__document.title",
+      "custom_tested": "c__checkIsTested",
+      "custom_callback": "c__retrieveFromEndpoint.callback",
+      "custom_user": "c__retrieveFromEndpoint.userID"
+    },
+    "docs": {
+      "description": "An event that detects when a page is viewed",
+      "pages": "All pages"
+    }
+  },
+  "view_item" : {
+    "target": ".productCard",
+    "trigger": "DOMContentLoaded",
+    "executeList": ["retrieveProductItem", "getData", "formatString", "pushData"],
+    "eventDetails": {
+      "event": "view_item",
+      "ecommerce": {
+        "items": [{
+          "item_name": "c__retrieveProductItem.name",
+          "item_id": "c__retrieveProductItem.id",
+          "item_brand": "c__retrieveProductItem.brand",
+          "item_category": "c__retrieveProductItem.category",
+          "item_variant": "c__retrieveProductItem.variant",
+          "price": "c__retrieveProductItem.price"
+        }]
+      }
+    },
+    "docs": {
+      "description": "An event to detects when a product item is viewed",
+      "pages": "All pages with products"
+    }
+  },
+  "view_items" : {
+    "target": ".productCard",
+    "trigger": "DOMContentLoaded",
+    "executeList": ["retrieveProductItems", "createArrayTemplate", "createArrayTemplate", "getData", "formatString", "pushData"],
+    "parameters": {
+      "createArrayTemplate": [["ecommerce.items"], ["ecommerceSpecial.items"]]
+    },
+    "eventDetails": {
+      "event": "view_items",
+      "ecommerce": {
+        "items": [{
+          "item_name": "c__retrieveProductItems[].name",
+          "item_id": "c__retrieveProductItems[].id",
+          "item_brand": "c__retrieveProductItems[].brand",
+          "item_category": "c__retrieveProductItems[].category",
+          "item_variant": "c__retrieveProductItems[].variant",
+          "price": "c__retrieveProductItems[].price"
+        }]
+      },
+      "ecommerceSpecial": {
+        "items": [{
+          "item_name": "c__retrieveProductItems[].name",
+          "item_id": "c__retrieveProductItems[].id",
+          "item_brand": "c__retrieveProductItems[].brand",
+          "item_category": "c__retrieveProductItems[].category",
+          "item_variant": "c__retrieveProductItems[].variant",
+          "price": "c__retrieveProductItems[].price"
+        }]
+      }
+    },
+    "docs": {
+      "description": "An event to detects when a product list is viewed",
+      "pages": "All pages with products"
+    }
+  }
+}
