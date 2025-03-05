@@ -1,7 +1,10 @@
-const {getObjectByPath, setObjectByPath, objectRunFunctionInDeep, normalizeString} = require('../utils');
+import { getObjectByPath, setObjectByPath } from './utils.js';
 
-function dataLayerFunctions(event, template, window) {
+export function dataLayerFunctions(eventReference, templateReference, windowReference) {
+  const template = templateReference;
   const eventDetails = template.eventDetails;
+  const event = eventReference;
+  const window = windowReference;
   const state = {
     event: event,
     previousFunctionReturn: null
@@ -71,13 +74,6 @@ function dataLayerFunctions(event, template, window) {
     window.dataLayer.push(data);
   }
 
-  const formatString = () => {
-    if (state.previousFunctionReturn?.state) {
-      const obj = objectRunFunctionInDeep(state.previousFunctionReturn?.state, normalizeString);
-      setState('data', obj);
-    }
-  }
-
   const createArrayTemplate = () => {
     const [path] = template?.parameters.createArrayTemplate[0];
     const itemTemplate = getObjectByPath(path, eventDetails);
@@ -85,63 +81,43 @@ function dataLayerFunctions(event, template, window) {
     template?.parameters.createArrayTemplate.shift();
   }
 
-  const checkIsTested = () => {
-    setState('checkIsTested', true);
-  }
-
-  const retrieveFromEndpoint = () => {
-    setState('retrieveFromEndpoint', {
-      callback: true,
-      userID: '768103821926'
-    });
-  }
-
-  const retrieveProductItem = () => {
-    setState('retrieveProductItem', {
-      name: "Cool Shirt",
-      id: "8321098316",
-      brand: "Crowthes",
-      category: "Apparel",
-      variant: "Blue",
-      price: 19.99
-    });
-  }
-
-  const retrieveProductItems = () => {
-    const product = {
-      name: "Cool Shirt",
-      id: "8321098316",
-      brand: "Crowthes",
-      category: "Apparel",
-      variant: "Blue",
-      price: 19.99
-    }
-    const product2 = {
-      name: "Cool Hat",
-      id: "1698748832",
-      brand: "Crowthes Master",
-      category: "Apparel",
-      variant: "Blues",
-      price: 27.87
-    }
-    setState('retrieveProductItems', [
-      {...product},
-      {...product2}
-    ]);
-  }
 
   return {
+    state,
+    template,
+    eventDetails,
+    window,
+    setState,
     pushData,
     getData,
-    formatString,
-    checkIsTested,
-    retrieveFromEndpoint,
-    retrieveProductItem,
-    retrieveProductItems,
     createArrayTemplate
   }
 }
 
-module.exports = {
-  dataLayerFunctions
+export function createDataLayerManager(event, template, window, helpers) {
+  window.dataLayer = window.dataLayer || [];
+  const dataLayerManager = dataLayerFunctions(event, template, window);
+
+  const combinedDataLayerFunctions = helpers.reduce((accumulator, module) => {
+    const moduleFunctions = module(dataLayerManager);
+    return { ...accumulator, ...moduleFunctions };
+  }, { ...dataLayerManager });
+  return combinedDataLayerFunctions;
+}
+
+export function createAndStartDataLayerManager(dataLayerTemplate, dataLayerHelpers) {
+  Object.keys(dataLayerTemplate).forEach((templateKey) => {
+    const template = dataLayerTemplate[templateKey];
+    const elements = template.target === 'document' ? [window.document] : window.document.querySelectorAll(template.target);
+
+    const functionsToExecute = (event) => {
+      const dataLayerManager = createDataLayerManager(event, template, window, dataLayerHelpers);
+      template.executeList.forEach((execute) => {
+        dataLayerManager[execute]();
+      })
+    };
+    elements.forEach((element) => {
+      element.addEventListener(template.trigger, functionsToExecute);
+    })
+  });
 }

@@ -1,4 +1,4 @@
-function getObjectByPath(path, root) {
+export function getObjectByPath(path, root) {
   const keys = path.split(/\.|\[|\]/).filter(Boolean);
 
   let result = root;
@@ -18,7 +18,7 @@ function getObjectByPath(path, root) {
   return result;
 }
 
-function setObjectByPath(path, value, root) {
+export function setObjectByPath(path, value, root) {
   const keys = path.split(/\.|\[|\]/).filter(Boolean);
 
   let result = root;
@@ -49,7 +49,7 @@ function setObjectByPath(path, value, root) {
   }
 }
 
-function extractKeys(obj, path = "") {
+export function extractKeys(obj, path = "") {
   let keys = [];
 
   if (Array.isArray(obj)) {
@@ -68,7 +68,7 @@ function extractKeys(obj, path = "") {
   return keys;
 }
 
-function objectRunFunctionInDeep(obj, handle) {
+export function objectRunFunctionInDeep(obj, handle) {
   if (Array.isArray(obj)) {
     return obj.map(item => objectRunFunctionInDeep(item, handle));
   }
@@ -90,17 +90,9 @@ function objectRunFunctionInDeep(obj, handle) {
   return obj;
 }
 
-function normalizeString(str) {
+export function normalizeString(str) {
   if (/^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i.test(str)) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
-}
-
-module.exports = {
-  getObjectByPath,
-  setObjectByPath,
-  extractKeys,
-  objectRunFunctionInDeep,
-  normalizeString
 }

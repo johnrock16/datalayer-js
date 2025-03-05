@@ -1,8 +1,12 @@
-const { extractKeys } = require('./utils');
+import { extractKeys } from './utils.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-function createDocs(template, docs, dataLayerResults) {
-  const fs = require('fs');
-  const path = require('path');
+export function createDocs(template, docs, dataLayerResults) {
   let docString = '# Datalayer  \n';
   docString += '## Table of content  \n';
 
@@ -38,7 +42,7 @@ function createDocs(template, docs, dataLayerResults) {
       filename += '.md';
     }
 
-    const filePath = path.join(__dirname, filename);
+    const filePath = path.join(`${__dirname}/docs`, filename);
     const dirPath = path.dirname(filePath);
 
     if (!fs.existsSync(dirPath)) {
@@ -53,8 +57,4 @@ function createDocs(template, docs, dataLayerResults) {
       }
     });
   }
-}
-
-module.exports = {
-  createDocs
 }

@@ -1,4 +1,6 @@
-const window = {
+import { createDataLayerManager } from "../../../../src/datalayerManager.js";
+
+export const window = {
   dataLayer: [],
   document : {
     title: "Google",
@@ -31,7 +33,7 @@ const window = {
   }
 }
 
-function createElement(id) {
+export function createElement(id) {
   return {
     id: id,
     textContent: '',
@@ -52,7 +54,7 @@ function createElement(id) {
   };
 }
 
-function simulateAllEvents(dataLayerTemplate, dataLayerFunctions) {
+export function simulateAllEvents(dataLayerTemplate, dataLayerHelpers) {
   const dataLayerResults = {}
   Object.keys(dataLayerTemplate).forEach((templateKey) => {
     const template = dataLayerTemplate[templateKey];
@@ -60,9 +62,9 @@ function simulateAllEvents(dataLayerTemplate, dataLayerFunctions) {
     const element = template.target === 'document' ? window.document : window.document.getElementById(template.target);
 
     const functionsToExecute = (event) => {
-      const functionToExecute = dataLayerFunctions(event, template, window);
+      const dataLayerManager = createDataLayerManager(event, template, window, dataLayerHelpers);
       template.executeList.forEach((execute) => {
-        functionToExecute[execute]();
+        dataLayerManager[execute]();
       })
     };
 
@@ -73,10 +75,4 @@ function simulateAllEvents(dataLayerTemplate, dataLayerFunctions) {
     console.log(JSON.stringify(window.dataLayer[window.dataLayer.length - 1], null, 2));
   });
   return dataLayerResults;
-}
-
-module.exports = {
-  window,
-  createElement,
-  simulateAllEvents
 }
