@@ -1,7 +1,7 @@
 import {objectRunFunctionInDeep, normalizeString} from '../../../src/utils.js';
 
 export function productHelpers(manager) {
-  const { state, setState, template, eventDetails, window } = manager;
+  const { state, setState, abortPushData, template, eventDetails, window } = manager;
 
   const formatString = () => {
     if (state.previousFunctionReturn?.state) {

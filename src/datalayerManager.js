@@ -7,13 +7,26 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
   const window = windowReference;
   const state = {
     event: event,
-    previousFunctionReturn: null
+    previousFunctionReturn: null,
+    status: {
+      ok: true
+    }
   };
 
   const setState = (key, data, overridePreviousFunctionReturn = true) => {
     state[key] = data;
     if (overridePreviousFunctionReturn) {
       state.previousFunctionReturn = {name:key ,state: data}
+    }
+  }
+
+  const abortPushData = (errorMessage = 'push aborted', consoleShowError = true) => {
+    state.status = {
+      error: true,
+      errorMessage
+    }
+    if (consoleShowError) {
+      console.error(errorMessage);
     }
   }
 
@@ -91,11 +104,13 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
   };
 
   const pushData = () => {
+    if (state.status?.error) return;
     const data = getData(false);
     window.dataLayer.push(data);
   }
 
   const createArrayTemplate = () => {
+    if (state.status?.error) return;
     const [path] = template?.parameters.createArrayTemplate[0];
     const itemTemplate = getObjectByPath(path, eventDetails);
     setObjectByPath(path, state[state.previousFunctionReturn.name].map(() => itemTemplate[0]), eventDetails);
@@ -111,7 +126,8 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
     setState,
     pushData,
     getData,
-    createArrayTemplate
+    createArrayTemplate,
+    abortPushData
   }
 }
 
