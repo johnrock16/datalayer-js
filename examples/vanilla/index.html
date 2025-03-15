@@ -10,9 +10,12 @@
   <main>
     <div class="container">
       <h1>Data Layer Rules</h1>
-      <a class="product-card" href="#" data-name="Cool Shirt" data-id="8321098316" data-brand="brand" data-category="Apparel" data-variant="Blue" data-price="19.99">
+      <a class="product-card" href="#" data-product='{"name":"Cool Shirt", "id": 8321098316, "brand": "crowthes", "category": "Apparel", "variant": "blue", "price": 19.99}'>
         Product card: Cool Shirt
       </a>
+      <button class="add-to-cart" data-product='{"name":"Cool Shirt", "id": 8321098316, "brand": "crowthes", "category": "Apparel", "variant": "blue", "price": 19.99}' data-quantity='{"quantity": 1}' data-currency-code="brl">
+        Add to Cart: Cool Shirt
+      </button>
     </div>
   </main>
   <style>

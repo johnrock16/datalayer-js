@@ -17,25 +17,49 @@
       "pages": "All pages"
     }
   },
-  "view_item" : {
+  "select_item" : {
     "target": ".product-card",
     "trigger": "click",
     "executeList": ["getData", "formatString", "pushData"],
     "eventDetails": {
-      "event": "view_item",
+      "event": "select_item",
       "ecommerce": {
         "items": [{
-          "item_name": "e__target.dataset.name",
-          "item_id": "e__target.dataset.id",
-          "item_brand": "e__target.dataset.brand",
-          "item_category": "e__target.dataset.category",
-          "item_variant": "e__target.dataset.variant",
-          "price": "e__target.dataset.price"
+          "item_name": "e__target.dataset.product?.name",
+          "item_id": "e__target.dataset.product?.id",
+          "item_brand": "e__target.dataset.product?.brand",
+          "item_category": "e__target.dataset.product?.category",
+          "item_variant": "e__target.dataset.product?.variant",
+          "price": "e__target.dataset.product?.price"
         }]
       }
     },
     "docs": {
-      "description": "An event to detects when a product item is viewed",
+      "description": "An event to detects when a product item is clicked",
+      "pages": "All pages with products"
+    }
+  },
+  "add_to_cart" : {
+    "target": ".add-to-cart",
+    "trigger": "click",
+    "executeList": ["getData", "formatString", "pushData"],
+    "eventDetails": {
+      "event": "add-to-cart",
+      "ecommerce": {
+        "currencyCode": "e__target.dataset.currencyCode",
+        "items": [{
+          "item_name": "e__target.dataset.product?.name",
+          "item_id": "e__target.dataset.product?.id",
+          "item_brand": "e__target.dataset.product?.brand",
+          "item_category": "e__target.dataset.product?.category",
+          "item_variant": "e__target.dataset.product?.variant",
+          "price": "e__target.dataset.product?.price",
+          "quantity": "e__target.dataset.quantity?.quantity"
+        }]
+      }
+    },
+    "docs": {
+      "description": "An event to detects when a product item is clicked",
       "pages": "All pages with products"
     }
   },

@@ -17,13 +17,34 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
     }
   }
 
+  const isJSONString = (str) => {
+    if (typeof str !== 'string') return false;
+    str = str.trim();
+    return (
+      (str.startsWith('{') && str.endsWith('}')) ||
+      (str.startsWith('[') && str.endsWith(']'))
+    );
+  }
+
   const getProcessedValue = (detailValue, state, index) => {
     if (typeof detailValue === 'string') {
       if (detailValue.indexOf('w__') === 0) {
         return getObjectByPath(detailValue.split('w__')[1], window);
       }
       if (detailValue.indexOf('e__') === 0) {
-        return getObjectByPath(detailValue.split('e__')[1], state.event);
+        let objectByPath = getObjectByPath(detailValue.split('e__')[1].split('?')[0], state.event)
+        if (isJSONString(objectByPath)) {
+          try {
+            objectByPath = JSON.parse(objectByPath);
+          } catch (error) {
+            console.error(error);
+          }
+        }
+        const modifier = detailValue.split('e__')[1].split('?.')[1];
+        if (modifier) {
+          objectByPath = getObjectByPath(modifier, objectByPath);
+        }
+        return objectByPath;
       }
       if (detailValue.indexOf('c__') === 0) {
         const path = detailValue.split('__');
