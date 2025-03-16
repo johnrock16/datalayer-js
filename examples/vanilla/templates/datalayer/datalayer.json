@@ -17,6 +17,22 @@
       "pages": "All pages"
     }
   },
+  "main_banner" : {
+    "target": ".main-banner",
+    "trigger": "onScreen:once",
+    "executeList": ["getData", "formatString", "pushData"],
+    "eventDetails": {
+      "event": "banner_view",
+      "banner_id": "e__target.dataset.id",
+      "banner_type": "e__target.dataset.type",
+      "banner_name": "e__target.dataset.name",
+      "banner_category": "e__target.dataset.category"
+    },
+    "docs": {
+      "description": "An event to detects when a main banner is viewed",
+      "pages": "All pages with main-banners"
+    }
+  },
   "select_item" : {
     "target": ".product-card",
     "trigger": "click",
@@ -42,9 +58,33 @@
   "add_to_cart" : {
     "target": ".add-to-cart",
     "trigger": "click",
-    "executeList": ["getData", "formatString", "pushData"],
+    "executeList": ["stopPropagation", "getData", "formatString", "pushData"],
     "eventDetails": {
-      "event": "add-to-cart",
+      "event": "add_to_cart",
+      "ecommerce": {
+        "currencyCode": "e__target.dataset.currencyCode",
+        "items": [{
+          "item_name": "e__target.dataset.product?.name",
+          "item_id": "e__target.dataset.product?.id",
+          "item_brand": "e__target.dataset.product?.brand",
+          "item_category": "e__target.dataset.product?.category",
+          "item_variant": "e__target.dataset.product?.variant",
+          "price": "e__target.dataset.product?.price",
+          "quantity": "e__target.dataset.quantity?.quantity"
+        }]
+      }
+    },
+    "docs": {
+      "description": "An event to detects when a product item is clicked",
+      "pages": "All pages with products"
+    }
+  },
+  "add_to_wishlist" : {
+    "target": ".add-to-wishlist",
+    "trigger": "click",
+    "executeList": ["stopPropagation", "getData", "formatString", "pushData"],
+    "eventDetails": {
+      "event": "add_to_wishlist",
       "ecommerce": {
         "currencyCode": "e__target.dataset.currencyCode",
         "items": [{
@@ -64,25 +104,16 @@
     }
   },
   "view_items" : {
-    "target": ".productCard",
-    "trigger": "DOMContentLoaded",
-    "executeList": ["retrieveProductItems", "createArrayTemplate", "createArrayTemplate", "getData", "formatString", "pushData"],
+    "target": ".product-cards",
+    "trigger": "onScreen:once",
+    "executeList": ["retrieveProductItems", "createArrayTemplate", "getData", "formatString", "pushData"],
     "parameters": {
-      "createArrayTemplate": [["ecommerce.items"], ["ecommerceSpecial.items"]]
+      "createArrayTemplate": [["ecommerce.items"]]
     },
     "eventDetails": {
       "event": "view_items",
+      "title": "e__target.dataset.name",
       "ecommerce": {
-        "items": [{
-          "item_name": "c__retrieveProductItems[].name",
-          "item_id": "c__retrieveProductItems[].id",
-          "item_brand": "c__retrieveProductItems[].brand",
-          "item_category": "c__retrieveProductItems[].category",
-          "item_variant": "c__retrieveProductItems[].variant",
-          "price": "c__retrieveProductItems[].price"
-        }]
-      },
-      "ecommerceSpecial": {
         "items": [{
           "item_name": "c__retrieveProductItems[].name",
           "item_id": "c__retrieveProductItems[].id",

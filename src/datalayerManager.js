@@ -1,7 +1,7 @@
 import { getObjectByPath, setObjectByPath } from './utils.js';
 
 export function dataLayerFunctions(eventReference, templateReference, windowReference) {
-  const template = templateReference;
+  const template = JSON.parse(JSON.stringify((templateReference)));
   const eventDetails = template.eventDetails;
   const event = eventReference;
   const window = windowReference;
@@ -87,7 +87,6 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
     return getProcessedValue(value, state, index);
   };
 
-
   const getData = (canSetState = true) => {
     const obj = {};
     const eventDetailsLocal = state.data ? state.data : eventDetails;
@@ -117,6 +116,11 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
     template?.parameters.createArrayTemplate.shift();
   }
 
+  const stopPropagation = () => {
+    if (state.event?.stopPropagation) {
+      state.event?.stopPropagation();
+    }
+  }
 
   return {
     state,
@@ -127,6 +131,7 @@ export function dataLayerFunctions(eventReference, templateReference, windowRefe
     pushData,
     getData,
     createArrayTemplate,
+    stopPropagation,
     abortPushData
   }
 }
@@ -142,6 +147,32 @@ export function createDataLayerManager(event, template, window, helpers) {
   return combinedDataLayerFunctions;
 }
 
+export function trackElementVisibility({element, functionsToExecute, template}) {
+  if (!element || !template.trigger || !functionsToExecute) {
+    console.error(`Element ${elementQuery} not found`);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const customEvent = new CustomEvent('onScreen:once')
+        entry.target.dispatchEvent(customEvent)
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.5 // Trigger when 50% of the element is in the viewport
+  });
+
+  element.addEventListener(template.trigger, functionsToExecute);
+  observer.observe(element);
+}
+
+const SPECIAL_EVENTS = {
+  "onScreen:once": trackElementVisibility
+}
+
 export function createAndStartDataLayerManager(dataLayerTemplate, dataLayerHelpers) {
   Object.keys(dataLayerTemplate).forEach((templateKey) => {
     const template = dataLayerTemplate[templateKey];
@@ -154,7 +185,11 @@ export function createAndStartDataLayerManager(dataLayerTemplate, dataLayerHelpe
       })
     };
     elements.forEach((element) => {
-      element.addEventListener(template.trigger, functionsToExecute);
+      if (SPECIAL_EVENTS[template.trigger]) {
+        SPECIAL_EVENTS[template.trigger]({template, element, functionsToExecute})
+      } else {
+        element.addEventListener(template.trigger, functionsToExecute);
+      }
     })
   });
 }

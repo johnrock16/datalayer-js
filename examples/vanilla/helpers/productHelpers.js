@@ -22,26 +22,30 @@ export function productHelpers(manager) {
   }
 
   const retrieveProductItems = () => {
-    const product = {
-      name: "Cool Shirt",
-      id: "8321098316",
-      brand: "Crowthes",
-      category: "Apparel",
-      variant: "Blue",
-      price: 19.99
+    const productCardElements = state.event.target.querySelectorAll('.product-card');
+    const products = [];
+    productCardElements.forEach((productCardElement) => {
+      if (productCardElement.dataset.product) {
+        try {
+          const product = JSON.parse(productCardElement.dataset.product)
+          if (product) {
+            products.push({
+              name: product.name,
+              id: product.id,
+              brand: product.brand,
+              category: product.category,
+              variant: product.variant,
+              price: product.price
+            });
+          }
+        } catch (error) {
+         console.error(error);
+        }
+      }
+    })
+    if (products.length > 0) {
+      setState('retrieveProductItems', products);
     }
-    const product2 = {
-      name: "Cool Hat",
-      id: "1698748832",
-      brand: "Crowthes Master",
-      category: "Apparel",
-      variant: "Blues",
-      price: 27.87
-    }
-    setState('retrieveProductItems', [
-      {...product},
-      {...product2}
-    ]);
   }
 
   return ({
